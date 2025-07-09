@@ -1,0 +1,47 @@
+name: Daily Java Activity
+
+on:
+  schedule:
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+
+jobs:
+  java-update:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Generate Java update
+        run: |
+          mkdir -p src test
+          FILENAME="Q$(date +%Y%m%d%H%M).java"
+          echo "// Auto-generated on $(date)" > src/$FILENAME
+          echo "public class ${FILENAME%.java} {" >> src/$FILENAME
+          echo "    public static void main(String[] args) {" >> src/$FILENAME
+          echo "        System.out.println(\"Daily Java update\");" >> src/$FILENAME
+          echo "    }" >> src/$FILENAME
+          echo "}" >> src/$FILENAME
+
+          TEST_NAME="Test${FILENAME%.java}.java"
+          echo "import org.junit.Test;" > test/$TEST_NAME
+          echo "public class ${TEST_NAME%.java} {" >> test/$TEST_NAME
+          echo "    @Test" >> test/$TEST_NAME
+          echo "    public void testOutput() {" >> test/$TEST_NAME
+          echo "        // Add test logic here" >> test/$TEST_NAME
+          echo "    }" >> test/$TEST_NAME
+          echo "}" >> test/$TEST_NAME
+
+      - name: Configure Git
+        run: |
+          git config --global user.name "Prasad Sawant"
+          git config --global user.email "prasadsawant.pvt@gmail.com"
+
+      - name: Commit and Push
+        run: |
+          git add .
+          LAST_FILE=$(ls -t src/*.java | head -n 1)
+          COMMIT_MSG="Add Java solution: $(basename $LAST_FILE .java) on $(date '+%Y-%m-%d %H:%M')"
+          git commit -m "$COMMIT_MSG" || echo "Nothing to commit"
+          git push
