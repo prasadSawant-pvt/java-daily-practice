@@ -1,0 +1,36 @@
+name: Java Backup Commit
+
+on:
+  schedule:
+    - cron: '0 12 * * *'  # Runs daily at 12 PM UTC
+  workflow_dispatch:
+
+jobs:
+  backup-commit:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Generate Backup Commit
+        run: |
+          mkdir -p src
+          FILE="src/Backup$(date +%Y%m%d%H%M).java"
+          echo "// Backup commit to maintain streak on $(date)" > $FILE
+          echo "public class Backup {" >> $FILE
+          echo "    public static void main(String[] args) {" >> $FILE
+          echo "        System.out.println(\"Backup commit\");" >> $FILE
+          echo "    }" >> $FILE
+          echo "}" >> $FILE
+
+      - name: Configure Git
+        run: |
+          git config --global user.name "Prasad Sawant"
+          git config --global user.email "prasadsawant.pvt@gmail.com"
+
+      - name: Commit and Push
+        run: |
+          git add .
+          git commit -m "Backup commit to maintain streak: $(date '+%Y-%m-%d %H:%M')" || echo "Nothing to commit"
+          git push
