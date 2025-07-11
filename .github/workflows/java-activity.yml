@@ -2,8 +2,11 @@ name: Daily Java Activity
 
 on:
   schedule:
-    - cron: '0 0 * * *'
+    - cron: '0 0 * * *'  # Runs daily at midnight UTC
   workflow_dispatch:
+
+permissions:
+  contents: write  # ✅ Needed for push access via GITHUB_TOKEN
 
 jobs:
   java-update:
@@ -12,6 +15,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}  # ✅ Use built-in token
 
       - name: Generate Java update
         run: |
@@ -33,17 +38,12 @@ jobs:
           echo "    }" >> test/$TEST_NAME
           echo "}" >> test/$TEST_NAME
 
-      - name: Configure Git
-        run: |
-          git config --global user.name "Prasad Sawant"
-          git config --global user.email "prasadsawant.pvt@gmail.com"
-
       - name: Commit and Push changes
         run: |
           git config user.name github-actions
           git config user.email github-actions@github.com
           git add .
-          git commit -m "Auto commit"
+          git commit -m "Auto commit: $(date '+%Y-%m-%d %H:%M')" || echo "Nothing to commit"
           git push
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
