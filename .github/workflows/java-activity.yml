@@ -38,10 +38,12 @@ jobs:
           git config --global user.name "Prasad Sawant"
           git config --global user.email "prasadsawant.pvt@gmail.com"
 
-      - name: Commit and Push
+      - name: Commit and Push changes
         run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
           git add .
-          LAST_FILE=$(ls -t src/*.java | head -n 1)
-          COMMIT_MSG="Add Java solution: $(basename $LAST_FILE .java) on $(date '+%Y-%m-%d %H:%M')"
-          git commit -m "$COMMIT_MSG" || echo "Nothing to commit"
+          git commit -m "Auto commit"
           git push
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
