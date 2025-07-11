@@ -1,40 +1,49 @@
-name: Java Backup Commit
+name: Daily Java Activity
 
 on:
   schedule:
-    - cron: '0 12 * * *'  # Runs daily at 12 PM UTC
+    - cron: '0 12 * * *'  # Runs daily at midnight UTC
   workflow_dispatch:
 
+permissions:
+  contents: write  # ✅ Needed for push access via GITHUB_TOKEN
+
 jobs:
-  backup-commit:
+  java-update:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}  # ✅ Use built-in token
 
-      - name: Generate Backup Commit
+      - name: Generate Java update
         run: |
-          mkdir -p src
-          FILE="src/Backup$(date +%Y%m%d%H%M).java"
-          echo "// Backup commit to maintain streak on $(date)" > $FILE
-          echo "public class Backup {" >> $FILE
-          echo "    public static void main(String[] args) {" >> $FILE
-          echo "        System.out.println(\"Backup commit\");" >> $FILE
-          echo "    }" >> $FILE
-          echo "}" >> $FILE
+          mkdir -p src test
+          FILENAME="Q$(date +%Y%m%d%H%M).java"
+          echo "// Auto-generated on $(date)" > src/$FILENAME
+          echo "public class ${FILENAME%.java} {" >> src/$FILENAME
+          echo "    public static void main(String[] args) {" >> src/$FILENAME
+          echo "        System.out.println(\"Daily Java update\");" >> src/$FILENAME
+          echo "    }" >> src/$FILENAME
+          echo "}" >> src/$FILENAME
 
-      - name: Configure Git
-        run: |
-          git config --global user.name "Prasad Sawant"
-          git config --global user.email "prasadsawant.pvt@gmail.com"
+          TEST_NAME="Test${FILENAME%.java}.java"
+          echo "import org.junit.Test;" > test/$TEST_NAME
+          echo "public class ${TEST_NAME%.java} {" >> test/$TEST_NAME
+          echo "    @Test" >> test/$TEST_NAME
+          echo "    public void testOutput() {" >> test/$TEST_NAME
+          echo "        // Add test logic here" >> test/$TEST_NAME
+          echo "    }" >> test/$TEST_NAME
+          echo "}" >> test/$TEST_NAME
 
       - name: Commit and Push changes
         run: |
           git config user.name github-actions
           git config user.email github-actions@github.com
           git add .
-          git commit -m "Auto commit"
+          git commit -m "Auto commit: $(date '+%Y-%m-%d %H:%M')" || echo "Nothing to commit"
           git push
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
